@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <button onclick="transform(['initial-button-1'], ['user-login-div'])" id="initial-button-1" class="initial-buttons">User Login</button>
+        <div id="user-login-div" class="items hidden">
+            <input type="text" placeholder="username" id="user-login-username-input">
+            <input type="password" placeholder="password" id="user-login-password-input">
+            <button onclick="Login('User')">Login</button> 
+            <p>Not Signed Up?<button class="smaller-buttons" onclick="transform(['user-login-div'], ['user-signup-div'])">Signup</button></p>
+        </div>
+        <div id="user-signup-div" class="items hidden">
+            <input type="text" placeholder="username" id="user-signup-username-input">
+            <input type="password" placeholder="password" id="user-signup-password-input">
+            <input type="text" placeholder="emailId" id="user-signup-email-input">
+            <button onclick="Signup('User')">Signup</button>
+            <p>Already Signed Up?<button class="smaller-buttons" onclick="transform(['user-signup-div'], ['initial-button-1'])">Login</button></p>
+        </div>
+        <button onclick="transform(['initial-button-2'], ['admin-login-div'])" id="initial-button-2" class="initial-buttons">Admin Login</button>
+        <div id="admin-login-div" class="items hidden">
+            <input type="text" placeholder="AdminUsername" id="admin-login-username-input">
+            <input type="password" placeholder="AdminPassword" id="admin-login-password-input">
+            <button onclick="Login('Admin')">Login</button> 
+            <p>Not Signed Up?<button class="smaller-buttons" onclick="transform(['admin-login-div'], ['admin-signup-div'])">Signup as admin</button></p>
+        </div>
+        <div id="admin-signup-div" class="items hidden">
+            <input type="text" placeholder="AdminUsername" id="admin-signup-username-input">
+            <input type="password" placeholder="AdminPassword" id="admin-signup-password-input">
+            <input type="text" placeholder="AdminEmailId" id="admin-signup-email-input">
+            <button onclick="Signup('Admin')">Signup</button>
+            <p>Already Signed Up?<button class="smaller-buttons" onclick="transform(['admin-signup-div'], ['initial-button-2'])">Login as admin</button></p>
+        </div>
+
+        <div id="user-interface" class="interface hidden">
+            <div class="header">
+                <div id="user-info"></div>
+                <button onclick="LogOut('User')">Logout</button>
+            </div>
+            <div id="explore-courses" class="content">
+                <button onclick="Render('User', 'explore-courses-section'); transform([], ['User-Explore-Courses-Section'])">Explore Courses</button>
+            </div>
+            <div id="User-Explore-Courses-Section" class="real-content-sections hidden">
+                <h2>Courses</h2>
+                <div id="explore-courses-section"></div>
+            </div>
+            <div id="MyCourses" class="content">
+                <button onclick="Render('User-Common', 'my-courses-section'); transform([], ['User-My-Courses-Section'])">My Courses</button>
+            </div>
+            <div id="User-My-Courses-Section" class="real-content-sections hidden">
+                <h2>My Courses</h2>
+                <div id="my-courses-section"></div>
+            </div>
+            
+        </div>
+
+        <div id="admin-interface" class="interface hidden">
+            <div class="header">
+                <div id="admin-info"></div>
+                <button onclick="LogOut('Admin')">Logout</button>
+            </div>
+            <div id="admin-explore-courses" class="content">
+                <button onclick="Render('Admin', 'admin-courses-section'); transform([], ['Admin-explore-content-section'])">Explore Courses</button>
+            </div>
+            <div id="Admin-explore-content-section" class="real-content-sections hidden">
+                <h2>Courses</h2>
+                <div id="admin-courses-section"></div>
+                <button id="CreateNewCourse" onclick="transform(['CreateNewCourse'], ['for-creating-course'])">Create New Course</button>
+                <div id="for-creating-course" class="hidden for-creating-course">
+                    <input type="text" placeholder="title" id="title-for-creating-course-input">
+                    <input type="number" placeholder="price" id="price-for-creating-course-input">
+                    <button id="CreateCourse" onclick="CreateCourse()">Create Course</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function transform(toBeHiddenIds, toBeShownIds){
+            toBeHiddenIds.forEach(id=> {
+                const el = document.getElementById(id);
+                if (el) el.classList.add("hidden"); 
+            });
+            
+            toBeShownIds.forEach(id=> {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove("hidden"); 
+            });
+        }
+
+        async function Login(forWhom){ //hardcoded values as it is far simpler for this project than using dynamic names for username, password, endpoint, body properties.
+            if(forWhom === "User"){
+                const username = document.getElementById("user-login-username-input").value.trim();
+                const password = document.getElementById("user-login-password-input").value.trim();
+
+                if (!username || !password){
+                    alert("username and password are compulsory, they cannot be empty");
+                    return;
+                }
+
+                try{
+                    let response = await fetch("http://localhost:3000/login", {
+                        method: "POST",
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    })
+
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data.token) {
+                        alert(data.message || "Login failed");
+                        return;
+                    }
+
+                    const token = data.token;
+                    console.log(token);
+
+                    localStorage.setItem("token", token);
+
+                    document.getElementById("user-login-username-input").value = "";
+                    document.getElementById("user-login-password-input").value = "";
+
+                    transform(["user-login-div", "initial-button-2", "admin-login-div","admin-signup-div"], ["user-interface"]);
+                    document.getElementById("user-info").innerHTML = `Username : ${username}`;
+
+                } catch(err) {
+                    console.error(err);
+                    alert("something went wrong, please check console");
+                }
+            }
+            else if(forWhom === "Admin"){
+                const AdminUsername = document.getElementById("admin-login-username-input").value.trim();
+                const AdminPassword = document.getElementById("admin-login-password-input").value.trim();
+
+                if (!AdminUsername || !AdminPassword){
+                    alert("username and password are compulsory, they cannot be empty");
+                    return;
+                }
+
+                try{
+                    let response = await fetch("http://localhost:3000/adminLogin", {
+                        method: "POST",
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            AdminUsername: AdminUsername,
+                            AdminPassword: AdminPassword
+                        })
+                    })
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.token) {
+                        alert(data.message || "Login failed");
+                        return;
+                    }
+
+                    const token = data.token;
+
+                    console.log(token);
+
+                    localStorage.setItem("AdminToken", token);
+
+                    document.getElementById("admin-login-username-input").value = "";
+                    document.getElementById("admin-login-password-input").value = "";
+
+                    transform(["admin-login-div", "initial-button-1", "user-login-div","user-signup-div"], ["admin-interface"]);
+                    document.getElementById("admin-info").innerHTML = `AdminUsername : ${AdminUsername}`;
+
+                } catch(err) {
+                    console.error(err);
+                    alert("something went wrong, please check console");
+                }
+            }
+        }
+
+        async function Signup(forWhom){
+            if(forWhom === "User"){
+                const username = document.getElementById("user-signup-username-input").value.trim();
+                const password = document.getElementById("user-signup-password-input").value.trim();
+                const email = document.getElementById("user-signup-email-input").value.trim();
+
+                if(!username || !password || !email){
+                    alert("username, password and email are compulsory, they cannot be empty");
+                    return;
+                }
+
+                try{
+                    let response = await fetch("http://localhost:3000/signup", {
+                        method: "POST",
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            username: username,
+                            password: password,
+                            email: email
+                        })
+                    })
+
+                    let data = await response.json();
+                    console.log(data);
+
+                    alert("User created");
+
+                    document.getElementById("user-signup-username-input").value = "";
+                    document.getElementById("user-signup-password-input").value = "";
+
+                    transform(["user-signup-div"], ["initial-button-1", "initial-button-2"])
+
+                } catch(err) {
+                    console.error(err);
+                    alert("something went wrong, please check console");
+                }
+            }
+            else if (forWhom === "Admin"){
+                const AdminUsername = document.getElementById("admin-signup-username-input").value.trim();
+                const AdminPassword = document.getElementById("admin-signup-password-input").value.trim();
+                const AdminEmail = document.getElementById("admin-signup-email-input").value.trim();
+
+                if(!AdminUsername || !AdminPassword || !AdminEmail){
+                    alert("username, password and email are compulsory, they cannot be empty");
+                    return;
+                }
+
+                try{
+                    let response = await fetch("http://localhost:3000/adminSignup", {
+                        method: "POST",
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            AdminUsername: AdminUsername,
+                            AdminPassword: AdminPassword,
+                            AdminEmail: AdminEmail
+                        })
+                    })
+
+                    let data = await response.json();
+                    console.log(data);
+
+                    alert("User created");
+
+                    document.getElementById("admin-signup-username-input").value = "";
+                    document.getElementById("admin-signup-password-input").value = "";
+
+                    transform(["admin-signup-div"], ["initial-button-1", "initial-button-2"])
+
+                } catch(err) {
+                    console.error(err);
+                    alert("something went wrong, please check console");
+            }
+            }
+        }
+
+        async function CreateComponent(title, price, forWhom, Num, location){
+            const box = document.createElement("div");
+            const titleDiv = document.createElement("div");
+            const priceDiv = document.createElement("div");
+
+            box.id = `box${Num}`;
+            box.className = "box";
+            
+            titleDiv.innerHTML = `Title: ${title}`;
+            priceDiv.innerHTML = `Price: ${price}`;
+
+            titleDiv.style.margin = "10px";
+            priceDiv.style.margin = "10px";
+
+            box.append(titleDiv, priceDiv);
+
+            const ViewDetails = document.createElement("button");
+            ViewDetails.innerHTML = "View Details"
+            ViewDetails.id = `ViewDetails${Num}`;
+
+            const PurchaseCourse = document.createElement("button");
+            PurchaseCourse.innerHTML = "Purchase Course";
+            PurchaseCourse.id = `PurchaseCourse${Num}`;
+
+            if (forWhom === "User-Common"){
+                box.appendChild(ViewDetails);
+                document.getElementById(location).appendChild(box);
+            }
+            else if(forWhom === "User-Uncommon"){
+                box.appendChild(PurchaseCourse);
+                document.getElementById(location).appendChild(box);
+
+                PurchaseCourse.onclick = async () => {
+                    let response = await fetch("http://localhost:3000/purchase", {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'authorization': localStorage.getItem("token")
+                        },
+                        body: JSON.stringify({
+                            title: title
+                        })
+                    })
+                    const data = await response.json();
+                    console.log(data);
+                    alert(data.message);
+
+                    box.appendChild(ViewDetails);
+                    
+                    transform([PurchaseCourse.id], [ViewDetails.id]);
+                }
+            }    
+            else if (forWhom === "Admin") {
+                let DeleteCourse = document.createElement("button");
+                DeleteCourse.innerHTML = "Delete Course"
+                DeleteCourse.id = `DeleteCourse${Num}`;
+
+                box.appendChild(DeleteCourse)
+                document.getElementById(location).appendChild(box);
+
+                DeleteCourse.onclick = async () => {
+                    let response = await fetch("http://localhost:3000/deleteCourse", {
+                        method: "DELETE",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'authorization': localStorage.getItem("AdminToken"),
+                        },
+                        body: JSON.stringify({
+                            title: title
+                        })
+                    })
+
+                    let data = await response.json();
+                    console.log(data);
+                    alert(data.message);
+
+                    Render("Admin", 'admin-courses-section');
+                }
+            }
+        }
+
+        async function commonUncommon() {
+            try{
+                const response = await fetch("http://localhost:3000/courses", {
+                    method: "GET",
+                    headers: {'Content-Type': 'application/json'},
+                })
+                const data = await response.json();
+                const courses = data.courses;
+
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    return { common: [], uncommon: [], courses };
+                }
+            
+                const response2 =  await fetch("http://localhost:3000/userCourses", {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'authorization': localStorage.getItem("token")
+                    }
+                })
+                const data2 = await response2.json();
+                const userCourses = data2.courses;
+
+                const common = courses.filter(course => userCourses.some(userCourse => course.title === userCourse.title));
+                const uncommon = courses.filter(course => !userCourses.some(userCourse => course.title === userCourse.title));
+
+                return{common, uncommon, courses};
+            } catch(err) {
+                alert("error while fetching courses, please check console");
+                return { common: [], uncommon: [], courses: [] };
+            }    
+        }
+
+        async function Render(forWhom, location, shouldClear = true){ //shouldClear is by default = true, unless we pass in false
+            try{
+                if(forWhom === "Admin"){
+                    const response = await fetch("http://localhost:3000/courses", {
+                        method: "GET",
+                        headers: {'Content-Type': 'application/json'},
+                    });
+                    const data = await response.json();
+                    const courses = data.courses || [];
+
+                    if(shouldClear){
+                        document.getElementById(location).innerHTML = "";
+                    }
+                    
+                    for (let i = 0; i < courses.length; i++){
+                        CreateComponent(courses[i].title, courses[i].price, "Admin", i, location);
+                    }
+                }
+                else{
+                    const { common, uncommon, courses} = await commonUncommon();
+
+                    if(forWhom === "User-Common"){
+                        if(shouldClear){
+                            document.getElementById(location).innerHTML = "";
+                        }
+                        for (let i = 0; i < common.length; i++){
+                            CreateComponent(common[i].title, common[i].price, "User-Common", i, location);
+                        }
+                    }
+                    else if(forWhom === "User-Uncommon"){
+                        if(shouldClear){
+                            document.getElementById(location).innerHTML = "";
+                        }
+                        for (let i = 0; i < uncommon.length; i++){
+                            CreateComponent(uncommon[i].title, uncommon[i].price, "User-Uncommon", i, location);
+                        }
+                    }
+                    else if(forWhom === "User"){
+                        document.getElementById(location).innerHTML = "";
+                        await Render("User-Common", location, false); // we await to avpoid race condition between the two render, since they call commonUncommon()in parallel
+                        await Render("User-Uncommon", location, false); // we do false because we dont wanna clear the element for each call
+                    }
+                }
+            } catch(err) {
+                console.error(err);
+                alert("something went wrong while rendering, please check console")
+            }
+        }
+    
+        async function CreateCourse(){
+            const title = document.getElementById("title-for-creating-course-input").value.trim();
+            const price = document.getElementById("price-for-creating-course-input").value.trim();
+
+            if (!title || !price || isNaN(Number(price))){
+                alert("title and price mandatory and price needs to be a number")
+                return;
+            }
+
+            try{
+                const response = await fetch("http://localhost:3000/createCourse", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'authorization': localStorage.getItem("AdminToken")
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        price: price
+                    })
+                })
+
+                const data = await response.json();
+                console.log(data);
+                alert(data.message);
+
+                document.getElementById("title-for-creating-course-input").innerHTML = "";
+                document.getElementById("price-for-creating-course-input").innerHTML = "";
+
+                transform(['for-creating-course'], ['CreateNewCourse']);
+                Render("Admin", 'admin-courses-section');
+
+            } catch(err) {
+                console.error(err);
+                alert("something went wrong, please check console")
+            }
+        }
+
+        async function MyCourses(){
+            const myCoursesSection = document.getElementById("my-courses-section");
+            myCoursesSection.innerHTML = "";
+
+            try{
+                Render("User-Common", 'my-courses-section');
+            } catch(err) {
+                console.error(err);
+                alert("something went wrong while fetching your courses, please check console")
+            }
+        }
+
+        function LogOut(forWhom){
+            if(forWhom === "User"){
+                localStorage.removeItem("token");
+                transform(["user-login-div", "user-signup-div", "admin-login-div", "admin-signup-div", "User-Explore-Courses-Section", "User-My-Courses-Section", "Admin-explore-content-section", "for-creating-course", "user-interface", "admin-interface"], ["initial-button-1", "initial-button-2"]);
+
+            } else if(forWhom === "Admin"){
+                localStorage.removeItem("AdminToken");
+                transform(["user-login-div", "user-signup-div", "admin-login-div", "admin-signup-div", "User-Explore-Courses-Section", "User-My-Courses-Section", "Admin-explore-content-section", "for-creating-course", "user-interface", "admin-interface"], ["initial-button-1", "initial-button-2"])
+            }
+        }
+    </script>
+
+</body>
+</html>

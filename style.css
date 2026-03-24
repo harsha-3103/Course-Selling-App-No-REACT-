@@ -1,0 +1,98 @@
+body {
+    background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    color: #e0e0e0;
+    font-family: sans-serif;
+}
+
+button{
+    padding: 10px;
+    font-size: 25px;
+    border-radius: 10px;
+    box-shadow: 1px 1px;
+    width: 200px;
+}
+
+#container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.items{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.smaller-buttons{
+    padding: 5px;
+    margin: 5px;
+    font-size: 15px;
+}
+
+p{
+    color: rgb(255, 255, 255);
+}
+
+input{
+    padding: 10px;
+    text-align: center;
+}
+
+.header{
+    display: flex;
+    justify-content: space-between;
+}
+
+.interface{
+    width: 100%;
+}
+
+.content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.box{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px;
+    border: 2px solid black;
+    padding: 20px;
+}
+
+#CreateNewCourse{
+    margin: 50px;
+}
+
+.for-creating-course{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 50px;
+}
+
+.real-content-sections{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hidden{
+    display: none;
+}
+
+.content{
+    margin-top: 25px;
+}
+
+.real-content-sections{
+    margin-top: 25px;
+}
+
